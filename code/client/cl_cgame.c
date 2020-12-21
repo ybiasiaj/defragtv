@@ -248,7 +248,8 @@ void CL_ConfigstringModified( void ) {
 
 }
 
-
+#define PY_CLIENT 1
+#include "python_module/api.h"
 /*
 ===================
 CL_GetServerCommand
@@ -256,6 +257,7 @@ CL_GetServerCommand
 Set up argc/argv for the given command
 ===================
 */
+
 qboolean CL_GetServerCommand( int serverCommandNumber ) {
 	char	*s;
 	char	*cmd;
@@ -286,6 +288,11 @@ rescan:
 	Cmd_TokenizeString( s );
 	cmd = Cmd_Argv(0);
 	argc = Cmd_Argc();
+
+	// PY_CLIENT parse server command for events
+#if PY_CLIENT == 1
+	python_module_invoke("servercommand");
+#endif
 
 	if ( !strcmp( cmd, "disconnect" ) ) {
 		// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=552

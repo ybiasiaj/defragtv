@@ -99,6 +99,8 @@ cvar_t	*com_busyWait;
 cvar_t  *con_autochat;
 #endif
 
+cvar_t* con_alternate_stdout;	// PY_CLIENT : disable STDOUT streambuf for alternate debug console
+
 #if idx64
 	int (*Q_VMftol)(void);
 #elif id386

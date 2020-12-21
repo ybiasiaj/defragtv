@@ -1827,6 +1827,10 @@ extern	cvar_t	*r_printShaders;
 
 extern cvar_t	*r_marksOnTriangleMeshes;
 
+// PY_CLIENT : skip RE_StretchPic for this area, so that text etc are not visible
+void R_cmdSetIgnoreArea();
+extern vec4_t r_cmdIgnoreArea;// { x, y, w, h }
+
 //====================================================================
 
 static ID_INLINE qboolean ShaderRequiresCPUDeforms(const shader_t * shader)

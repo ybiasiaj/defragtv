@@ -256,6 +256,7 @@ void	RE_SetColor( const float *rgba ) {
 RE_StretchPic
 =============
 */
+vec4_t r_cmdIgnoreArea = { -1, -1, -1, -1 };
 void RE_StretchPic ( float x, float y, float w, float h, 
 					  float s1, float t1, float s2, float t2, qhandle_t hShader ) {
 	stretchPicCommand_t	*cmd;
@@ -263,6 +264,17 @@ void RE_StretchPic ( float x, float y, float w, float h,
   if (!tr.registered) {
     return;
   }
+
+  // PY_CLIENT : skip RE_StretchPic for this area, so that text etc are not visible
+  if(x > r_cmdIgnoreArea[0]
+	 && x < (r_cmdIgnoreArea[0] + r_cmdIgnoreArea[2])
+	 && y > r_cmdIgnoreArea[1]
+	 && y < (r_cmdIgnoreArea[1] + r_cmdIgnoreArea[3])
+	 )
+  {
+	  return;
+  };
+
 	cmd = R_GetCommandBuffer( sizeof( *cmd ) );
 	if ( !cmd ) {
 		return;

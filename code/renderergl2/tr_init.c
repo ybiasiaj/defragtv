@@ -718,6 +718,39 @@ void R_LevelShot( void ) {
 	ri.Printf( PRINT_ALL, "Wrote %s\n", checkname );
 }
 
+/*
+	PY_CLIENT : get the ignoreBounds values
+	e.g. r_cmdSetIgnoreArea 300 700 400 200
+*/
+void R_cmdSetIgnoreArea_f()
+{
+
+	// never hit?
+	if(ri.Cmd_Argc < 5)
+	{
+		ri.Printf(PRINT_ALL, "ignoreArea must be < float, 4 >\n");
+
+		for(int i = 0; i < 4; i++)
+		{
+			r_cmdIgnoreArea[i] = -1;
+		};
+
+		return;
+	}
+
+	for(int i = 0; i < 4; i++)
+	{
+		r_cmdIgnoreArea[i] = atof(ri.Cmd_Argv(i + 1));
+	};
+	ri.Printf(PRINT_ALL, "ignoreArea set to : { %f %f %f %f }\n"
+			  , r_cmdIgnoreArea[0]
+			  , r_cmdIgnoreArea[1]
+			  , r_cmdIgnoreArea[2]
+			  , r_cmdIgnoreArea[3]
+	);
+};
+
+
 /* 
 ================== 
 R_ScreenShot_f
@@ -1385,6 +1418,8 @@ void R_Register( void )
 	ri.Cmd_AddCommand( "minimize", GLimp_Minimize );
 	ri.Cmd_AddCommand( "gfxmeminfo", GfxMemInfo_f );
 	ri.Cmd_AddCommand( "exportCubemaps", R_ExportCubemaps_f );
+
+	ri.Cmd_AddCommand("r_cmdSetIgnoreArea", R_cmdSetIgnoreArea_f);
 }
 
 void R_InitQueries(void)

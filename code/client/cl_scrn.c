@@ -465,6 +465,9 @@ void SCR_Init( void ) {
 
 //=======================================================
 
+#define PY_CLIENT 1
+#include "python_module/api.h"
+
 /*
 ==================
 SCR_DrawScreenField
@@ -529,6 +532,10 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 			SCR_DrawDemoRecording();
 #ifdef USE_VOIP
 			SCR_DrawVoipMeter();
+#endif
+			// PY_CLIENT : call here so SCR_ functions work for HUD drawing
+#if PY_CLIENT == 1
+			python_module_invoke("draw2d");
 #endif
 			break;
 		}

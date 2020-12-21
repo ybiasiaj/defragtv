@@ -2922,6 +2922,9 @@ void CL_CheckUserinfo( void ) {
 	}
 }
 
+
+#define PY_CLIENT 1
+#include "python_module/api.h"
 /*
 ==================
 CL_Frame
@@ -3062,6 +3065,10 @@ void CL_Frame ( int msec ) {
 	SCR_RunCinematic();
 
 	Con_RunConsole();
+
+#if PY_CLIENT == 1
+	python_module_invoke("cl_frame");
+#endif
 
 	cls.framecount++;
 }
@@ -3488,6 +3495,61 @@ void CL_Sayto_f( void ) {
 	CL_AddReliableCommand(va("tell %i \"%s\"", clientNum, p ), qfalse);
 }
 
+#define PY_CLIENT 1
+#include "python_module/api.h"
+
+/*
+====================
+CL_GetPlayerNameForClient
+====================
+*/
+const char* CL_GetPlayerNameForClient(int clientNum)
+{
+	const char* info;
+	int			count;
+
+	info = cl.gameState.stringData + cl.gameState.stringOffsets[CS_SERVERINFO];
+	count = atoi(Info_ValueForKey(info, "sv_maxclients"));
+
+	if(clientNum < 0 || clientNum >= count) return "";
+	info = cl.gameState.stringData + cl.gameState.stringOffsets[CS_PLAYERS + clientNum];
+	return Info_ValueForKey(info, "n");
+};
+
+/*
+====================
+CL_GetServerMapName
+====================
+*/
+const char* CL_GetServerMapName()
+{
+	const char* info;
+	const char* mapname;
+
+	info = cl.gameState.stringData + cl.gameState.stringOffsets[CS_SERVERINFO];
+	mapname = Info_ValueForKey(info, "mapname");
+
+	return mapname;
+};
+
+/*
+====================
+CL_DoesMapExist
+====================
+*/
+qboolean CL_DoesMapExist(const char* mapname)
+{
+	const char* bsp;
+
+	bsp = va("maps/%s.bsp", mapname);
+
+	if(!FS_FileExists(bsp) && FS_FileIsInPAK(bsp, NULL) == -1)
+	{
+		return qfalse;
+	}
+	return qtrue;
+};
+
 /*
 ====================
 CL_Init
@@ -3706,6 +3768,20 @@ void CL_Init( void ) {
 	Cvar_Get( "cl_guid", "", CVAR_USERINFO | CVAR_ROM );
 	CL_UpdateGUID( NULL, 0 );
 
+	Cvar_Get("con_alternate_stdout", "1", CVAR_ARCHIVE | CVAR_LATCH | CVAR_NORESTART | CVAR_PROTECTED);
+
+	// PY_CLIENT : create a python instance and register commands
+	// note - py_eval will only work when explicitly enabled by the library
+#ifdef PY_CLIENT
+	{
+		python_module_initialize();
+		Cmd_AddCommand("py_reload", python_module_reload);
+		Cmd_AddCommand("py_invoke", python_module_invoke_cmd);
+		Cmd_AddCommand("py_eval", python_module_eval_cmd);
+		python_module_reload();
+	}
+#endif
+
 	Com_Printf( "----- Client Initialization Complete -----\n" );
 }
 
@@ -3736,7 +3812,12 @@ void CL_Shutdown(char *finalmsg, qboolean disconnect, qboolean quit)
 
 	if(disconnect)
 		CL_Disconnect(qtrue);
-	
+
+	// PY_CLIENT : shutdown the python instance and its supporting features
+#if PY_CLIENT == 1
+	python_module_shutdown();
+#endif
+
 	CL_ClearMemory(qtrue);
 	CL_Snd_Shutdown();
 

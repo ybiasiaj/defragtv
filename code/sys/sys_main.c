@@ -418,10 +418,16 @@ void Sys_AnsiColorPrint( const char *msg )
 Sys_Print
 =================
 */
-void Sys_Print( const char *msg )
+extern cvar_t* con_alternate_stdout;
+void Sys_Print(const char* msg)
 {
-	CON_LogWrite( msg );
-	CON_Print( msg );
+	CON_LogWrite(msg);
+
+	// PY_CLIENT : disable STDOUT streambuf for alternate debug console
+	if(con_alternate_stdout && con_alternate_stdout->integer == 0)
+	{
+		CON_Print(msg);
+	};
 }
 
 /*
